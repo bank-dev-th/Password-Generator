@@ -1,4 +1,4 @@
-# Password Generator
+# Password-Generator
 
 https://delblock.github.io/Password-Generator/
 
