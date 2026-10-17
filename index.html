@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สร้างรหัสผ่าน — Password Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 35px 25px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 450px;
+        }
+        h1 {
+            text-align: center;
+            color: #1E40AF;
+            margin-bottom: 5px;
+            font-size: 26px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #6B7280;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .password-display {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+        .password-output {
+            flex: 1;
+            padding: 14px 16px;
+            background: #EFF6FF;
+            border: 2px solid #BFDBFE;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #1E40AF;
+            letter-spacing: 1px;
+        }
+        .copy-btn {
+            padding: 14px 18px;
+            background: #10B981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background 0.2s;
+        }
+        .copy-btn:hover { background: #059669; }
+        .copy-btn.copied { background: #047857; }
+        .settings {
+            margin-bottom: 25px;
+        }
+        .setting-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #E5E7EB;
+        }
+        .setting-row:last-child { border-bottom: none; }
+        label {
+            font-weight: 500;
+            color: #374151;
+            font-size: 15px;
+        }
+        input[type="range"] {
+            width: 80px;
+            cursor: pointer;
+        }
+        .length-value {
+            min-width: 30px;
+            text-align: right;
+            font-weight: bold;
+            color: #1E40AF;
+        }
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #1E40AF;
+        }
+        .strength-section {
+            margin-bottom: 25px;
+        }
+        .strength-label {
+            font-size: 14px;
+            color: #6B7280;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .strength-bar-container {
+            height: 8px;
+            background: #E5E7EB;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .strength-bar {
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        .strength-weak { background: #EF4444; width: 25%; }
+        .strength-fair { background: #F59E0B; width: 50%; }
+        .strength-good { background: #10B981; width: 75%; }
+        .strength-strong { background: #059669; width: 100%; }
+        .generate-btn {
+            width: 100%;
+            padding: 15px;
+            background: #1E40AF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .generate-btn:hover { background: #1D4ED3; }
+        .generate-btn:active { transform: scale(0.98); }
+        .message {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            height: 20px;
+        }
+        .message.success { color: #10B981; }
+        .message.error { color: #EF4444; }
+        .tip {
+            margin-top: 20px;
+            background: #FEF3C7;
+            border-left: 4px solid #F59E0B;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #92400E;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🔐 สร้างรหัสผ่าน</h1>
+        <p class="subtitle">สร้างรหัสผ่านที่ปลอดภัยและรัดกุมทันที</p>
+
+        <div class="password-display">
+            <input type="text" class="password-output" id="passwordOutput" readonly placeholder="คลิกปุ่มด้านล่าง">
+            <button class="copy-btn" id="copyBtn" onclick="copyPassword()" title="คัดลอก">📋</button>
+        </div>
+
+        <div class="settings">
+            <div class="setting-row">
+                <label>ความยาวรหัส</label>
+                <input type="range" id="lengthSlider" min="6" max="32" value="16" oninput="updateLength()">
+                <span class="length-value" id="lengthValue">16</span>
+            </div>
+            <div class="setting-row">
+                <label>ตัวอักษรพิมพ์ใหญ่ (A-Z)</label>
+                <input type="checkbox" id="includeUppercase" checked>
+            </div>
+            <div class="setting-row">
+                <label>ตัวอักษรพิมพ์เล็ก (a-z)</label>
+                <input type="checkbox" id="includeLowercase" checked>
+            </div>
+            <div class="setting-row">
+                <label>ตัวเลข (0-9)</label>
+                <input type="checkbox" id="includeNumbers" checked>
+            </div>
+            <div class="setting-row">
+                <label>สัญลักษณ์ (!@#$%...)</label>
+                <input type="checkbox" id="includeSymbols">
+            </div>
+        </div>
+
+        <div class="strength-section">
+            <div class="strength-label">
+                <span>ความปลอดภัย</span>
+                <span id="strengthText">—</span>
+            </div>
+            <div class="strength-bar-container">
+                <div class="strength-bar" id="strengthBar"></div>
+            </div>
+        </div>
+
+        <button class="generate-btn" onclick="generatePassword()">✨ สร้างรหัสผ่าน</button>
+        
+        <div class="message" id="message"></div>
+
+        <div class="tip">
+            💡 <strong>คำแนะนำ:</strong><br>
+            • ใช้รหัสผ่านอย่างน้อย 12 ตัวอักษร<br>
+            • ผสมตัวอักษร ตัวเลข และสัญลักษณ์เพื่อความปลอดภัยสูงสุด<br>
+            • อย่าใช้รหัสเดิมซ้ำหลายบัญชี
+        </div>
+    </div>
+
+<script>
+    function updateLength() {
+        const slider = document.getElementById('lengthSlider');
+        document.getElementById('lengthValue').textContent = slider.value;
+    }
+
+    function generatePassword() {
+        const length = parseInt(document.getElementById('lengthSlider').value);
+        const includeUppercase = document.getElementById('includeUppercase').checked;
+        const includeLowercase = document.getElementById('includeLowercase').checked;
+        const includeNumbers = document.getElementById('includeNumbers').checked;
+        const includeSymbols = document.getElementById('includeSymbols').checked;
+
+        if (!includeUppercase && !includeLowercase && !includeNumbers && !includeSymbols) {
+            showMessage('⚠️ กรุณาเลือกอย่างน้อย 1 ประเภท', 'error');
+            return;
+        }
+
+        const UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const LOWER = 'abcdefghijklmnopqrstuvwxyz';
+        const NUMBERS = '0123456789';
+        const SYMBOLS = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+        let chars = '';
+        let password = '';
+        let guaranteedChars = [];
+
+        if (includeUppercase) {
+            chars += UPPER;
+            guaranteedChars.push(UPPER[Math.floor(Math.random() * UPPER.length)]);
+        }
+        if (includeLowercase) {
+            chars += LOWER;
+            guaranteedChars.push(LOWER[Math.floor(Math.random() * LOWER.length)]);
+        }
+        if (includeNumbers) {
+            chars += NUMBERS;
+            guaranteedChars.push(NUMBERS[Math.floor(Math.random() * NUMBERS.length)]);
+        }
+        if (includeSymbols) {
+            chars += SYMBOLS;
+            guaranteedChars.push(SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]);
+        }
+
+        for (let i = guaranteedChars.length; i < length; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+
+        password = [...guaranteedChars, ...password].sort(() => Math.random() - 0.5).join('');
+
+        document.getElementById('passwordOutput').value = password;
+        updateStrength(password);
+        showMessage('✅ สร้างรหัสผ่านสำเร็จ!', 'success');
+    }
+
+    function copyPassword() {
+        const password = document.getElementById('passwordOutput').value;
+        if (!password) {
+            showMessage('⚠️ ยังไม่มีรหัสผ่าน', 'error');
+            return;
+        }
+        
+        navigator.clipboard.writeText(password).then(() => {
+            const btn = document.getElementById('copyBtn');
+            btn.classList.add('copied');
+            btn.textContent = '✓';
+            showMessage('📋 คัดลอกแล้ว!', 'success');
+            
+            setTimeout(() => {
+                btn.textContent = '📋';
+                btn.classList.remove('copied');
+                document.getElementById('message').textContent = '';
+            }, 2000);
+        });
+    }
+
+    function updateStrength(password) {
+        const bar = document.getElementById('strengthBar');
+        const text = document.getElementById('strengthText');
+        let score = 0;
+
+        if (password.length >= 8) score++;
+        if (password.length >= 12) score++;
+        if (password.length >= 16) score++;
+        if (/[A-Z]/.test(password)) score++;
+        if (/[a-z]/.test(password)) score++;
+        if (/[0-9]/.test(password)) score++;
+        if (/[^A-Za-z0-9]/.test(password)) score++;
+
+        bar.className = 'strength-bar';
+        if (score <= 2) {
+            bar.classList.add('strength-weak');
+            text.textContent = 'อ่อนแอ';
+            text.style.color = '#EF4444';
+        } else if (score <= 4) {
+            bar.classList.add('strength-fair');
+            text.textContent = 'ปานกลาง';
+            text.style.color = '#F59E0B';
+        } else if (score <= 5) {
+            bar.classList.add('strength-good');
+            text.textContent = 'ดี';
+            text.style.color = '#10B981';
+        } else {
+            bar.classList.add('strength-strong');
+            text.textContent = 'แข็งแรงมาก';
+            text.style.color = '#059669';
+        }
+    }
+
+    function showMessage(text, type) {
+        const msg = document.getElementById('message');
+        msg.textContent = text;
+        msg.className = `message ${type}`;
+        if (type === 'success') {
+            setTimeout(() => {
+                if (msg.textContent.includes('สำเร็จ')) msg.textContent = '';
+            }, 3000);
+        }
+    }
+
+    window.onload = function() {
+        generatePassword();
+    };
+</script>
+</body>
+</html>
